@@ -39,7 +39,7 @@ uint8_t bumper_sensor_value;
 
 // Global variable to debounce switch
 
-uint16_t dbnc_counter = 0;
+uint64_t dbnc_counter = 0;
 
 /**
  * @brief SysTick interrupt handler function.
@@ -58,7 +58,6 @@ uint16_t dbnc_counter = 0;
  * @return None
  */
 
-bool pressed = false;
 void SysTick_Handler(void)
 {
     dbnc_counter ++;
