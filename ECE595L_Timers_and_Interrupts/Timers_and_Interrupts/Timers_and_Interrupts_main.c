@@ -27,6 +27,8 @@ uint8_t PMOD_BTN_counter = 0x00;
 // that have occurred. it increments in SysTick_Handler on each interrupt event.
 uint32_t SysTick_counter = 0;
 
+uint32_t SysTick_counter_2s = 0;
+
 // Global variable flag used in SysTick_Handler to initiate SysTick_counter
 uint8_t SysTick_enable = 0x00;
 
@@ -55,17 +57,24 @@ void SysTick_Handler(void)
 {
     if (SysTick_enable == 0x01)
     {
-        SysTick_counter = SysTick_counter + 1;
+        SysTick_counter++;
         if (SysTick_counter >= SYSTICK_INT_TOGGLE_RATE_MS)
         {
             SysTick_counter = 0;
             P1->OUT ^= 0x01;
+        }
+
+        SysTick_counter_2s++;
+        if (SysTick_counter_2s >= SYSTICK_INT_2S_TOGGLE_RATE_MS)
+        {
+            SysTick_counter_2s = 0;
             P8->OUT ^= 0x40;
         }
     }
     else
     {
         SysTick_counter = 0;
+        SysTick_counter_2s = 0;
         P1->OUT &= ~0x01;
         P8->OUT &= ~0x40;
     }
@@ -120,28 +129,34 @@ void PMOD_BTN_Handler(uint8_t pmod_btn_state)
         // PMOD BTN0 is pressed
         case 0x01:
         {
+            PMOD_BTN_counter++;
+            PMOD_8LD_Output(PMOD_BTN_counter);
             break;
         }
 
         // PMOD BTN1 is pressed
         case 0x02:
         {
+            PMOD_BTN_counter--;
+            PMOD_8LD_Output(PMOD_BTN_counter);
             break;
         }
 
         // PMOD BTN2 is pressed
         case 0x04:
         {
+            SysTick_enable = 0;
+            PMOD_BTN_counter = 0;
+            PMOD_8LD_Output(PMOD_BTN_counter);
             break;
         }
 
         // PMOD BTN3 is pressed
         case 0x08:
         {
-            P8->OUT ^= 0x80;
             SysTick_enable ^= 0x01;
-            LED2_Toggle(RGB_LED_GREEN);
-
+            PMOD_BTN_counter = 0xAA;
+            PMOD_8LD_Output(PMOD_BTN_counter);
             break;
         }
 
