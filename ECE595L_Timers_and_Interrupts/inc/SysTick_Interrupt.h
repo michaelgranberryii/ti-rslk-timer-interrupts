@@ -16,7 +16,7 @@
 
 // The toggle rate for SysTick_Interrupt in ms
 #define SYSTICK_INT_TOGGLE_RATE_MS 500
-
+// Another toggle rate for SysTick_Interrupt in ms
 #define SYSTICK_INT_2S_TOGGLE_RATE_MS 2000
 
 // The number of clock cycles between SysTick interrupts

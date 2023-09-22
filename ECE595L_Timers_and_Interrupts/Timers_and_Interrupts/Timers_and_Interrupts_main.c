@@ -6,7 +6,7 @@
  * It uses the SysTick timer to demonstrate periodic interrupts and the GPIO pins used for
  * the Bumper Sensors and the PMOD BTN module to show external I/O-triggered interrupts.
  *
- * @author Aaron Nanas
+ * @author Aaron Nanas, Abdullah Hendy, Michael Granberry
  *
  */
 
@@ -37,18 +37,21 @@ uint8_t SysTick_enable = 0x00;
 uint8_t bumper_sensor_value;
 
 
-// Global variable to debounce switch
-
+// Global variable counter to keep track of the number of SysTick interrupts
+// that have occurred. it increments in SysTick_Handler on each interrupt event.
+// This counter is intentionally made large and is used to debounce the bump sensor.
 uint64_t dbnc_counter = 0;
 
 /**
  * @brief SysTick interrupt handler function.
  *
  * This is the interrupt handler for the SysTick timer. It is automatically called whenever the SysTick timer reaches
- * its specified period (SYSTICK_INT_NUM_CLK_CYCLES) and generates an interrupt. The handler increments the 'SysTick_counter'
- * variable when the 'SysTick_enabled' variable is set to 1 and checks if it has reached the toggle rate (SYSTICK_INT_TOGGLE_RATE_MS).
- * When the toggle rate is reached, it toggles the state of LED1 (P1.0) and the back left red LED (P8.6). Then, it resets the 'SysTick_counter' variable.
- * Otherwise, 'SysTick_counter' will be 0 and LED1 and the back left LED are also set to 0 when 'SysTick_enabled' is 0.
+ * its specified period (SYSTICK_INT_NUM_CLK_CYCLES) and generates an interrupt. The handler always increments the 'dbnc_counter' variable. The handler also
+ * increments the 'SysTick_counter' and 'SysTick_counter_2s' variables when the 'SysTick_enabled' variable is set to 1 and checks if they has reached
+ * the toggle rate (SYSTICK_INT_TOGGLE_RATE_MS), (SYSTICK_INT_TOGGLE_RATE_MS) respectively. When the toggle rate is reached for Systick_counter,
+ * it toggles the state of LED1 (P1.0). When the toggle rate is reached for SysTick_counter_2s, it toggles the back left red LED (P8.6).
+ * Then, it resets the 'SysTick_counter' variable.
+ * Otherwise, 'SysTick_counter', 'SysTick_counter_2s' will be 0 and LED1 and the back left LED are also set to 0 when 'SysTick_enabled' is 0.
  *
  * @note Before using this handler, ensure that the SysTick timer has been initialized using the SysTick_Init function.
  *       The timer should be configured to generate periodic interrupts at the desired rate specified by SYSTICK_INT_NUM_CLK_CYCLES.
@@ -92,7 +95,7 @@ void SysTick_Handler(void)
  * This is the interrupt handler for the bumper sensor interrupts. It is called when a falling edge event is detected on
  * any of the bump sensor pins. The function toggles the state of the back right red LED (P8.7).
  * Additionally, it updates the 'bump_sensor_value' variable with the provided 'bump_sensor' parameter, representing the
- * state of the bump sensors at the time of the interrupt.
+ * state of the bump sensors at the time of the interrupt. This only happens when the debouncing period has passed.
  *
  * @param bumper_sensor_state An 8-bit unsigned integer representing the bump sensor states at the time of the interrupt.
  *
@@ -100,6 +103,8 @@ void SysTick_Handler(void)
  *       appropriately using the Bump_Sensors_Init function.
  *
  * @note The Bump_Sensors_Handler function should be defined and implemented separately before being used.
+ *
+ * @note Potential bug in this function is if the dbnc counter rolled over and the sensor interrupt was fired when the dbnc counter is between 0-300
  *
  * @return None
  */
@@ -123,6 +128,14 @@ void Bumper_Sensors_Handler(uint8_t bumper_sensor_state)
  * @param pmod_btn_state An 8-bit unsigned integer representing the state of the PMOD buttons at the time of the interrupt.
  *                       Each bit corresponds to a specific button: Bit 0 for BTN0, Bit 1 for BTN1, Bit 2 for BTN2, and Bit 3 for BTN3.
  *                       A bit value of 1 indicates the button is pressed, and 0 indicates it is released.
+ *
+ *  button_status      PMOD 8 LED          SysTick Enable
+ *  -------------      -----------        -----------------
+ *      0x1              Count Up            Unaffected
+ *      0x2              Count Down          Unaffected
+ *      0x4              Reset (0s)           Disabled
+ *      0x8               0xAA                 Toggle
+ *
  *
  * @note Before using this handler, ensure that the PMOD button interrupts have been initialized and configured
  *       appropriately using the PMOD_BTN_Interrupt_Init function.
