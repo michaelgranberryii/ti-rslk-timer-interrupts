@@ -98,6 +98,7 @@ void PORT4_IRQHandler(void)
     // Clear the interrupt flags for P4.7 - P4.5, P4.3, P4.2, and P4.0
     P4->IFG &= ~0xED;
 
+    uint8_t bumper_sensor_val = Bumper_Read();
     // Execute the user-defined task
-    (*Bumper_Task)(Bumper_Read());
+    (*Bumper_Task)(bumper_sensor_val);
 }

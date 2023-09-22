@@ -37,6 +37,10 @@ uint8_t SysTick_enable = 0x00;
 uint8_t bumper_sensor_value;
 
 
+// Global variable to debounce switch
+
+uint16_t dbnc_counter = 0;
+
 /**
  * @brief SysTick interrupt handler function.
  *
@@ -53,8 +57,11 @@ uint8_t bumper_sensor_value;
  *
  * @return None
  */
+
+bool pressed = false;
 void SysTick_Handler(void)
 {
+    dbnc_counter ++;
     if (SysTick_enable == 0x01)
     {
         SysTick_counter++;
@@ -99,8 +106,11 @@ void SysTick_Handler(void)
  */
 void Bumper_Sensors_Handler(uint8_t bumper_sensor_state)
 {
-    printf("Bumper Sensor State: 0x%02X\n", bumper_sensor_state);
-    P8->OUT ^= 0x80;
+    if (dbnc_counter >= 300){
+        printf("Bumper Sensor State: 0x%02X\n", bumper_sensor_state);
+        P8->OUT ^= 0x80;
+        dbnc_counter = 0;
+    }
 }
 
 /**
