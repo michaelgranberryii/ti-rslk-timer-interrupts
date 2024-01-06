@@ -6,7 +6,7 @@
  * It uses the SysTick timer to demonstrate periodic interrupts and the GPIO pins used for
  * the Bumper Sensors and the PMOD BTN module to show external I/O-triggered interrupts.
  *
- * @author Aaron Nanas, Abdullah Hendy, Michael Granberry
+ * @author Michael Granberry, Abdullah Hendy, Aaron Nanas
  *
  */
 
